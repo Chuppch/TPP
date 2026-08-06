@@ -1,0 +1,16 @@
+{
+  "name": "paper-four-market-asymmetric",
+  "travel_costs": [
+    [0, 15, 30, 18, 16],
+    [30, 0, 19, 24, 27],
+    [24, 30, 0, 27, 20],
+    [24, 18, 15, 0, 24],
+    [19, 15, 23, 26, 0]
+  ],
+  "market_purchase_costs": [
+    [null, null, 24],
+    [null, 21, 26],
+    [23, null, 20],
+    [29, 30, 28]
+  ]
+}
