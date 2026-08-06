@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tpp-ils-rc"
+version = "0.1.0"
+description = "CPU-only reproduction of the ILS-RC algorithm for the unrestricted Traveling Purchaser Problem"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Chuppch" }]
+dependencies = []
+
+[project.scripts]
+tpp-ils-rc = "tpp.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
