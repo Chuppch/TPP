@@ -9,6 +9,72 @@
 - 第一优先级是维持一份可验证的论文原始基线。神经网络、禁忌搜索、新邻域、增量缓存或性能优化如果后续加入，必须与基线分层、可关闭，并单独说明与论文的差异。
 - 未获得作者原始代码。因此可以声称“根据论文伪代码完成算法级复现”，不得在未使用同一 benchmark、参数、种子、运行次数和统计方法时宣称完整复现论文实验表。
 
+## 算法执行链路总览
+
+整个 ILS-RC 求解的数据流和调用关系如下：
+
+```text
+输入：JSON 文件 → io.py 解析 → TPPInstance（不可变问题实例）
+      命令行参数 → cli.py 解析 → ILSConfig（不可变算法配置）
+
+求解：ils.py（总编排器）
+      │
+      ├── 初始阶段
+      │     constructive_heuristic(instance) → 初始 Solution
+      │     route_configuration(solution)    → 改进市场集合
+      │     local_search(solution)           → 优化访问顺序
+      │     → incumbent = 当前最优
+      │
+      └── 迭代循环（k_max 轮）
+            │
+            ├── 正常情况：destroy → repair → 扰动后的 Solution
+            │   或
+            ├── 僵局重启：diversity_constructive_heuristic → 全新 Solution
+            │
+            ├── route_configuration → 改进市场集合
+            ├── local_search        → 优化访问顺序
+            └── if 严格改进 → 更新 incumbent
+
+输出：ILSResult（最优 Solution + 运行元数据）→ cli.py 格式化输出
+```
+
+### 模块角色定位
+
+| 模块 | 角色 | 说明 |
+|------|------|------|
+| `domain/model.py` | 数据定义 | 四个不可变 dataclass：TPPInstance、Solution、ILSConfig、ILSResult |
+| `domain/evaluation.py` | 工具函数集 | build_solution、travel_cost、is_strictly_better 等，被动调用 |
+| `core/local_solution/constructive.py` | 初始解生成 | 贪心选市场 + 最近邻排路线，仅在 ILS 开始时调用一次 |
+| `core/local_solution/neighborhoods.py` | 底层邻域能力 | 五种邻域生成器 + explore 引擎（best-improvement 搜索） |
+| `core/local_solution/route_configuration.py` | 中层编排 | 按固定顺序编排 ADD/DROP/EXCHANGE 改变市场集合 |
+| `core/local_solution/local_search.py` | 中层编排 | 三种序列编排 MOVE/SWITCH 优化访问顺序 |
+| `core/ils_engine/perturbation.py` | 扰动机制 | destroy 删市场 + repair 补回来，跳出局部最优 |
+| `core/ils_engine/diversity.py` | 多样性重启 | 利用共同出现记忆构造差异化新解 |
+| `core/ils_engine/ils.py` | 顶层总编排 | 控制迭代、扰动/重启决策、incumbent 更新 |
+| `exact.py` | 验证 oracle | 穷举真实最优解（仅限 ≤8 市场），不参与 ILS 搜索 |
+| `io.py` + `cli.py` | 输入输出 | JSON 解析、参数解析、结果格式化 |
+
+### Solution 的生命周期
+
+- `Solution` 是 frozen dataclass，单个对象创建后不可变
+- 算法中的"改进"是创建新 Solution 替换旧引用，不是原地修改
+- ILS 同时持有 `current`（当前工作解）和 `incumbent`（历史最优）两个引用
+- 最终 `incumbent` 被包进 `ILSResult` 作为输出
+
+### 调用层次
+
+```text
+cli.py
+  └── ils.py（总编排）
+        ├── constructive.py
+        ├── route_configuration.py ──→ neighborhoods.py（explore）
+        ├── local_search.py ────────→ neighborhoods.py（explore）
+        ├── perturbation.py（destroy/repair）
+        └── diversity.py（diversity_constructive_heuristic）
+```
+
+所有算法模块最终汇聚到 `ils.py` 被编排；`domain/` 层的 model 和 evaluation 作为基础设施被所有模块引用。
+
 ## 源码分层与模块责任
 
 ```text
