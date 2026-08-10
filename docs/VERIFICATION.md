@@ -3,7 +3,7 @@
 ## 验证环境
 
 ```text
-日期：2026-08-07
+日期：2026-08-10
 系统：macOS / Darwin arm64
 Python：3.9.6
 计算设备：纯 CPU
@@ -34,7 +34,7 @@ PYTHONPATH=src python3 scripts/verify_small_instances.py
 ### 单元测试摘要
 
 ```text
-Ran 20 tests in 0.037s
+Ran 28 tests in 0.047s
 
 OK
 ```
@@ -51,27 +51,41 @@ OK
 - Destroy、Repair 和 Diversity Memory；
 - ILS-RC 固定随机种子复现；
 - 八市场穷举保护上限。
+- JSON 正常读取、缺失字段、非对象根节点与非法矩阵；
+- CLI `solve` / `exact` 成功路径，以及文件不存在和错误 JSON 失败路径。
 
-### 论文示例与三个随机极小实例
+### 论文示例与 20 个固定种子随机极小实例
 
 ```text
 CPU-only verification: one process, markets <= 5, exact limit <= 8
-paper-four-market: exact=121, ils=121, gap=0.000%, elapsed=0.006429s
-tiny-symmetric-7: exact=141, ils=141, gap=0.000%, elapsed=0.014797s
-tiny-asymmetric-13: exact=134, ils=134, gap=0.000%, elapsed=0.018987s
-tiny-symmetric-29: exact=222, ils=222, gap=0.000%, elapsed=0.022749s
+paper-four-market: exact=121, ils=121, gap=0.000%, elapsed=0.006889s
+tiny-symmetric-0: exact=249, ils=249, gap=0.000%, elapsed=0.021089s
+tiny-asymmetric-1: exact=162, ils=162, gap=0.000%, elapsed=0.021901s
+tiny-symmetric-2: exact=119, ils=119, gap=0.000%, elapsed=0.021826s
+tiny-asymmetric-3: exact=158, ils=158, gap=0.000%, elapsed=0.015790s
+tiny-symmetric-4: exact=134, ils=134, gap=0.000%, elapsed=0.017393s
+tiny-asymmetric-5: exact=122, ils=124, gap=1.639%, elapsed=0.015491s
+tiny-symmetric-6: exact=140, ils=140, gap=0.000%, elapsed=0.012811s
+tiny-asymmetric-7: exact=163, ils=163, gap=0.000%, elapsed=0.018645s
+tiny-symmetric-8: exact=139, ils=139, gap=0.000%, elapsed=0.017562s
+tiny-asymmetric-9: exact=101, ils=101, gap=0.000%, elapsed=0.016908s
+tiny-symmetric-10: exact=146, ils=146, gap=0.000%, elapsed=0.012693s
+tiny-asymmetric-11: exact=173, ils=173, gap=0.000%, elapsed=0.016673s
+tiny-symmetric-12: exact=167, ils=167, gap=0.000%, elapsed=0.019919s
+tiny-asymmetric-13: exact=134, ils=134, gap=0.000%, elapsed=0.019710s
+tiny-symmetric-14: exact=169, ils=169, gap=0.000%, elapsed=0.012978s
+tiny-asymmetric-15: exact=134, ils=134, gap=0.000%, elapsed=0.018670s
+tiny-symmetric-16: exact=162, ils=162, gap=0.000%, elapsed=0.013044s
+tiny-asymmetric-17: exact=162, ils=162, gap=0.000%, elapsed=0.013120s
+tiny-symmetric-18: exact=165, ils=165, gap=0.000%, elapsed=0.012959s
+tiny-asymmetric-19: exact=167, ils=167, gap=0.000%, elapsed=0.012791s
+random_instances_checked=20 symmetric=10 asymmetric=10 worst_gap=1.639%
 verification_status: PASS
 ```
 
-运行时间会受机器状态影响，正确性判断不依赖具体耗时。
-
-### 20 个随机实例回归
-
-```text
-random_instances_checked=20 worst_gap=1.639% status=PASS
-```
-
 该结果表示全部启发式解均可行，且没有出现低于独立穷举最优值的错误。最差 gap 为 1.639%，符合启发式算法不保证每次命中全局最优的预期。
+
+运行时间会受机器状态影响，正确性判断不依赖具体耗时。
 
 ## 论文四市场固定回归结果
 

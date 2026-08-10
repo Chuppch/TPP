@@ -75,13 +75,27 @@ def main() -> int:
         f"gap={gap:.3f}%, elapsed={elapsed:.6f}s"
     )
 
-    for seed, symmetric in ((7, True), (13, False), (29, True)):
+    worst_gap = 0.0
+    symmetric_count = 0
+    asymmetric_count = 0
+    for seed in range(20):
+        symmetric = seed % 2 == 0
         instance = make_random_instance(seed, symmetric)
         optimum, heuristic, gap, elapsed = verify(instance, seed)
+        worst_gap = max(worst_gap, gap)
+        if symmetric:
+            symmetric_count += 1
+        else:
+            asymmetric_count += 1
         print(
             f"{instance.name}: exact={optimum:g}, ils={heuristic:g}, "
             f"gap={gap:.3f}%, elapsed={elapsed:.6f}s"
         )
+    print(
+        "random_instances_checked=20 "
+        f"symmetric={symmetric_count} asymmetric={asymmetric_count} "
+        f"worst_gap={worst_gap:.3f}%"
+    )
     print("verification_status: PASS")
     return 0
 
