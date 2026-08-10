@@ -59,7 +59,7 @@ TPP 是 Traveling Salesman Problem（TSP）的推广。采购者需要从仓库�
 ```text
 TPP/
 ├── README.md
-├── docs/         # Section 2 复现计划与验证记录
+├── docs/         # 真实验证命令与输出记录
 ├── src/tpp/
 │   ├── core/
 │   │   ├── local_solution/ # 构造并改进局部最优解
