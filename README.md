@@ -10,7 +10,7 @@
 
 论文架构：
 
-![TPP ILS-RC 论文项目架构](assets/image.png)
+![TPP ILS-RC 论文项目架构](assets/tpp-ils-rc-architecture.png)
 
 ## 问题简介
 
