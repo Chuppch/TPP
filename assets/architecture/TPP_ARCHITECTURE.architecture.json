@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TPP ILS-RC 算法复现架构",
+    "subtitle": "从 JSON 实例到不可变解：Algorithms 2–9 搜索链路与独立穷举验证",
+    "output": "TPP_ARCHITECTURE.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Chuppch/TPP",
+      "revision": "f325c3b316c953908ad415f98190b1c5add47f34"
+    },
+    "views": [
+      {
+        "id": "solve-path",
+        "label": "ILS-RC 主路径",
+        "focus": ["instance-json", "cli-io", "domain-model", "ils-orchestrator", "constructive", "route-config", "local-search", "result-output"],
+        "note": "初始构造经 RC + LS 形成 incumbent，候选解每轮返回 ILS 判定。"
+      },
+      {
+        "id": "search-operators",
+        "label": "搜索算子链",
+        "focus": ["ils-orchestrator", "constructive", "diversification", "route-config", "local-search", "neighborhood-engine", "evaluation-hub"],
+        "note": "构造、扰动/重启、市场集合改进与路线顺序改进共享完整评估。"
+      },
+      {
+        "id": "exact-validation",
+        "label": "独立穷举验证",
+        "focus": ["cli-io", "domain-model", "evaluation-hub", "result-output"],
+        "note": "exact 仅限市场数 ≤ 8，作为独立 oracle，不参与启发式搜索。"
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [48, 110],
+    "cols": 8,
+    "gapX": 56,
+    "gapY": 68,
+    "cellW": 168,
+    "cellH": 76
+  },
+  "components": [
+    {
+      "id": "instance-json",
+      "type": "external",
+      "label": "UTPP 实例 JSON",
+      "sublabel": "有向旅行成本 + 市场商品价格",
+      "tag": "depot = 0",
+      "row": 1,
+      "col": 0,
+      "sources": [
+        {"path": "examples/paper_four_market.json", "line": 1, "label": "论文四市场实例"}
+      ]
+    },
+    {
+      "id": "cli-io",
+      "type": "frontend",
+      "label": "CLI 与 I/O 边界",
+      "sublabel": "solve / exact · JSON I/O",
+      "tag": "python -m tpp.cli",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        {"path": "src/tpp/cli.py", "line": 14, "end_line": 58, "label": "命令分流"},
+        {"path": "src/tpp/io.py", "line": 12, "end_line": 61, "label": "输入输出"}
+      ]
+    },
+    {
+      "id": "domain-model",
+      "type": "backend",
+      "label": "不可变领域模型",
+      "sublabel": "Instance · Solution · Config",
+      "tag": "frozen dataclasses",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        {"path": "src/tpp/domain/model.py", "line": 18, "end_line": 200, "label": "核心数据结构"}
+      ]
+    },
+    {
+      "id": "ils-orchestrator",
+      "type": "backend",
+      "label": "ILS-RC 总编排器",
+      "sublabel": "init · k-loop · incumbent · λ",
+      "tag": "Algorithm 9",
+      "row": 1,
+      "col": 3,
+      "sources": [
+        {"path": "src/tpp/core/ils_engine/ils.py", "line": 17, "end_line": 72, "label": "ILS 主循环"}
+      ]
+    },
+    {
+      "id": "route-config",
+      "type": "backend",
+      "label": "Route Configuration",
+      "sublabel": "ADD → DROP → EXCHANGE → DROP∞",
+      "tag": "Algorithms 3–4",
+      "row": 0,
+      "col": 4,
+      "sources": [
+        {"path": "src/tpp/core/local_solution/route_configuration.py", "line": 9, "end_line": 20, "label": "市场集合编排"},
+        {"path": "src/tpp/core/local_solution/neighborhoods.py", "line": 103, "end_line": 143, "label": "best-improvement Explore"}
+      ]
+    },
+    {
+      "id": "local-search",
+      "type": "backend",
+      "label": "Local Search",
+      "sublabel": "比较三种 MOVE / SWITCH 序列",
+      "tag": "Algorithm 5",
+      "row": 0,
+      "col": 5,
+      "sources": [
+        {"path": "src/tpp/core/local_solution/local_search.py", "line": 10, "end_line": 25, "label": "路线顺序改进"}
+      ]
+    },
+    {
+      "id": "result-output",
+      "type": "external",
+      "label": "ILSResult 输出",
+      "sublabel": "路线 · 采购 · 成本",
+      "tag": "text or JSON",
+      "row": 1,
+      "col": 7,
+      "sources": [
+        {"path": "src/tpp/domain/model.py", "line": 122, "end_line": 200, "label": "解与结果"},
+        {"path": "src/tpp/io.py", "line": 31, "end_line": 61, "label": "输出格式"}
+      ]
+    },
+    {
+      "id": "acceptance-control",
+      "type": "backend",
+      "label": "候选接纳与停滞控制",
+      "sublabel": "strict improve? incumbent : λ++",
+      "tag": "inside Algorithm 9",
+      "row": 1,
+      "col": 6,
+      "sources": [
+        {"path": "src/tpp/core/ils_engine/ils.py", "line": 40, "end_line": 71, "label": "迭代、接纳与返回"}
+      ]
+    },
+    {
+      "id": "constructive",
+      "type": "backend",
+      "label": "Constructive",
+      "sublabel": "贪心市场覆盖 + 最近邻路线",
+      "tag": "Algorithm 2",
+      "row": 0,
+      "col": 3,
+      "sources": [
+        {"path": "src/tpp/core/local_solution/constructive.py", "line": 9, "end_line": 46, "label": "初始解构造"}
+      ]
+    },
+    {
+      "id": "diversification",
+      "type": "backend",
+      "label": "扰动与多样性",
+      "sublabel": "Destroy / Repair + 共现记忆重启",
+      "tag": "Algorithms 6–8",
+      "row": 2,
+      "col": 3,
+      "sources": [
+        {"path": "src/tpp/core/ils_engine/perturbation.py", "line": 13, "end_line": 63, "label": "Destroy / Repair"},
+        {"path": "src/tpp/core/ils_engine/diversity.py", "line": 12, "end_line": 81, "label": "共现记忆与重启"}
+      ]
+    },
+    {
+      "id": "neighborhood-engine",
+      "type": "backend",
+      "label": "五类邻域引擎",
+      "sublabel": "5× best-improvement 邻域",
+      "tag": "best-improvement",
+      "row": 2,
+      "col": 5,
+      "sources": [
+        {"path": "src/tpp/core/local_solution/neighborhoods.py", "line": 17, "end_line": 143, "label": "邻域生成与 Explore"}
+      ]
+    },
+    {
+      "id": "evaluation-hub",
+      "type": "backend",
+      "label": "评估 + Exact Oracle",
+      "sublabel": "build_solution · exhaustive ≤ 8",
+      "tag": "independent validation",
+      "row": 3,
+      "col": 5,
+      "sources": [
+        {"path": "src/tpp/domain/evaluation.py", "line": 18, "end_line": 112, "label": "路线验证与成本重算"},
+        {"path": "src/tpp/exact.py", "line": 11, "end_line": 34, "label": "独立穷举 oracle"}
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Algorithm 9 · ILS-RC 整体编排边界",
+      "wraps": ["ils-orchestrator", "constructive", "diversification", "route-config", "local-search", "acceptance-control", "neighborhood-engine"],
+      "pad": 28
+    }
+  ],
+  "connections": [
+    {"id": "load-json", "from": "instance-json", "to": "cli-io", "label": "JSON", "variant": "emphasis"},
+    {"id": "parse-instance", "from": "cli-io", "to": "domain-model", "variant": "emphasis"},
+    {"id": "start-solver", "from": "domain-model", "to": "ils-orchestrator", "variant": "emphasis"},
+    {"id": "initial-solution", "from": "ils-orchestrator", "to": "constructive", "label": "初始阶段"},
+    {"id": "initial-to-route-config", "from": "constructive", "to": "route-config", "variant": "emphasis"},
+    {"id": "optimize-order", "from": "route-config", "to": "local-search", "variant": "emphasis"},
+    {"id": "return-candidate", "from": "local-search", "to": "acceptance-control", "label": "局部最优 x'", "variant": "emphasis"},
+    {"id": "next-iteration", "from": "acceptance-control", "to": "ils-orchestrator", "label": "下一轮 k+1", "variant": "emphasis", "via": [[1392, 70], [660, 70], [660, 284]]},
+    {"id": "escape-local-optimum", "from": "ils-orchestrator", "to": "diversification", "label": "每轮：扰动 / λ 重启", "variant": "dashed", "labelDy": 24},
+    {"id": "diverse-to-route-config", "from": "diversification", "to": "route-config", "variant": "dashed"},
+    {"id": "finish-search", "from": "acceptance-control", "to": "result-output", "label": "k_max 完成", "variant": "emphasis"},
+    {"id": "market-neighborhoods", "from": "route-config", "to": "neighborhood-engine", "label": "ADD / DROP / EXCHANGE"},
+    {"id": "sequence-neighborhoods", "from": "local-search", "to": "neighborhood-engine", "label": "MOVE / SWITCH", "labelDy": 24},
+    {"id": "rebuild-candidate", "from": "neighborhood-engine", "to": "evaluation-hub", "label": "完整重算", "labelDy": 24},
+    {"id": "choose-exact", "from": "cli-io", "to": "evaluation-hub", "label": "exact 子命令", "variant": "dashed"}
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "执行边界",
+      "items": ["Python ≥ 3.9，仅标准库，单进程 CPU", "ILS 使用 ILSConfig.seed 创建独立 random.Random", "节点上限 50，ILS 迭代上限 1000"]
+    },
+    {
+      "dot": "emerald",
+      "title": "Algorithm 9 循环",
+      "items": ["初始化：Constructive → Route Configuration → Local Search → incumbent", "每轮：Destroy/Repair 或 Diversity Constructive → RC → LS", "LS 候选解返回 ILS：严格改进则更新 incumbent，否则累加停滞计数"]
+    },
+    {
+      "dot": "violet",
+      "title": "验证边界",
+      "items": ["exact.py 是 markets ≤ 8 的独立真值 oracle", "启发式求解器不读取穷举结果来选择或修正解", "固定论文实例最优总成本为 121"]
+    }
+  ]
+}

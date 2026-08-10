@@ -1,4 +1,4 @@
-# TPP ILS-RC 论文算法复现
+# TPP ILS-RC 论文算法
 
 本项目用于复现 Traveling Purchaser Problem（TPP，旅行采购商问题）的 ILS-RC 启发式算法。
 
@@ -7,6 +7,10 @@
 > Tomás Kapancioglu and Raquel Bernardino.  
 > *An iterated local search algorithm for the traveling purchaser problem*.  
 > European Journal of Operational Research, 324 (2025), 759–772.
+
+论文架构：
+
+![TPP ILS-RC 论文项目架构](assets/image.png)
 
 ## 问题简介
 
