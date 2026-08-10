@@ -11,7 +11,7 @@ from tpp.cli import main
 from tpp.io import load_instance
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PAPER_INSTANCE = ROOT / "examples" / "paper_four_market.json"
 
 
