@@ -66,7 +66,10 @@ TPP/
 │   │   └── ils_engine/     # 扰动、多样性与 ILS 循环
 │   ├── domain/   # 数据模型、可行性和成本计算
 │   └── *.py      # CLI、输入输出与穷举器
-├── tests/        # 单元测试
+├── tests/
+│   ├── unit/        # 单个组件的行为和不变量
+│   ├── integration/ # ILS、CLI 和实验流水线
+│   └── fixtures.py  # 共享极小实例
 ├── examples/     # 论文示例和小规模输入
 └── scripts/      # 极小实例穷举验证入口
 ```
@@ -102,6 +105,47 @@ PYTHONPATH=src python3 scripts/verify_small_instances.py
 
 CLI 默认参数是面向本地小规模验证的安全参数，不代表论文 Section 3 中针对完整 benchmark 调优后的参数。
 
+## 实验流水线
+
+项目提供了一套单进程、纯 CPU 的实验脚本，用来把“运行算法”变成可验证、可统计和可绘图的实验结果。使用论文四市场实例跑通完整流水线：
+
+```bash
+PYTHONPATH=src python3 scripts/run_experiment_pipeline.py \
+  examples/paper_four_market.json \
+  --seeds 0,1,2,3,4 \
+  --k-max 20 --lambda-max 5 --alpha 0.5 \
+  --exact-small \
+  --output-dir tmp/experiments
+```
+
+`--exact-small` 仅对不超过 8 个市场的实例调用穷举 oracle，并以真实最优值计算 Gap。更大实例需通过 `--known-best` 传入包含 `instance,best_known_cost` 两列的 CSV；没有参考最优值时，仍会记录成本和时间，但 Gap 留空。
+
+流水线依次调用：
+
+```text
+run_benchmarks.py       批量运行实例 × 固定种子
+verify_results.py       重建路线、采购分配和成本，校验可行性
+summarize_results.py    计算最好值、平均值、标准差、Gap 和平均耗时
+plot_results.py         用 Python 标准库生成零依赖 SVG 图表
+```
+
+默认产物是：
+
+```text
+tmp/experiments/
+├── raw_results.csv
+├── verification.json
+├── summary.csv
+├── algorithm_summary.csv
+└── figures/
+    ├── mean_cost_comparison.svg
+    ├── gap_comparison.svg
+    ├── runtime_comparison.svg
+    └── seed_stability.svg
+```
+
+脚本当前读取本项目的 JSON 实例格式。获取论文 TPPLIB benchmark 后，还需根据实际原始文件格式补充转换器，不应把未转换的文件直接交给 JSON 加载器。
+
 ## 验证基准
 
 第一项固定回归测试使用论文给出的四市场、三商品非对称实例。参考最优方案为：
@@ -129,6 +173,7 @@ CLI 默认参数是面向本地小规模验证的安全参数，不代表论文 
 - [x] 添加验证脚本和验证输出；
 - [x] 补充 CLI、JSON 读取和非法输入的单元测试；
 - [x] 将 20 组固定种子随机实例回归整合为可重复运行的验证入口。
+- [x] 增加批量运行、结果校验、统计汇总和 SVG 绘图的实验流水线。
 
 ## 下一步 TODO
 
@@ -151,5 +196,3 @@ CLI 默认参数是面向本地小规模验证的安全参数，不代表论文 
 ## 复现边界
 
 本项目首先追求算法流程、目标函数和算子行为与论文描述一致。由于作者原始代码、并列选择规则、邻域遍历顺序和完整随机状态可能未公开，因此不预先承诺逐项复现论文实验表格中的所有数值。
-
-Chuppch

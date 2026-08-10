@@ -25,6 +25,15 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 scripts/verify_small_instances.py
 ```
 
+### 实验流水线回归
+
+```bash
+PYTHONPATH=src python3 scripts/run_experiment_pipeline.py \
+  examples/paper_four_market.json \
+  --seeds 0,1 --k-max 2 --lambda-max 1 --alpha 0.5 \
+  --exact-small --output-dir tmp/experiment-smoke
+```
+
 ### 额外随机回归
 
 使用 20 个固定种子的五市场、四商品实例，对称和非对称旅行成本交替生成。每个实例都通过独立穷举器计算真实最优值，再检查 ILS-RC 解的可行性与目标值下界关系。
@@ -34,7 +43,7 @@ PYTHONPATH=src python3 scripts/verify_small_instances.py
 ### 单元测试摘要
 
 ```text
-Ran 28 tests in 0.047s
+Ran 31 tests in 0.051s
 
 OK
 ```
@@ -53,6 +62,30 @@ OK
 - 八市场穷举保护上限。
 - JSON 正常读取、缺失字段、非对象根节点与非法矩阵；
 - CLI `solve` / `exact` 成功路径，以及文件不存在和错误 JSON 失败路径。
+- 实验批量运行安全上限、结果防篡改校验和端到端流水线。
+
+### 实验流水线实际输出
+
+```text
+stage=run
+instance=paper-four-market-asymmetric markets=4 items=3 reference=exact
+  seed=0 cost=121 gap=0% elapsed=0.000411s
+  seed=1 cost=121 gap=0% elapsed=0.000408s
+raw_results=tmp/experiment-smoke/raw_results.csv runs=2 failures=0
+stage=verify
+rows=2 valid=2 invalid=0 verification_status=PASS
+stage=summarize
+instance_summary=tmp/experiment-smoke/summary.csv rows=1
+algorithm_summary=tmp/experiment-smoke/algorithm_summary.csv rows=1
+stage=plot
+figure=tmp/experiment-smoke/figures/mean_cost_comparison.svg
+figure=tmp/experiment-smoke/figures/gap_comparison.svg
+figure=tmp/experiment-smoke/figures/runtime_comparison.svg
+figure=tmp/experiment-smoke/figures/seed_stability.svg
+pipeline_status=PASS output_dir=tmp/experiment-smoke
+```
+
+该流水线生成原始 CSV、实例级和算法级汇总表、JSON 校验报告以及四张 SVG。四张 SVG 均已通过 `xmllint --noout` 结构校验。
 
 ### 论文示例与 20 个固定种子随机极小实例
 
